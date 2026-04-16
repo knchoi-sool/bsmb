@@ -35,14 +35,20 @@ import pandas as pd
 import pyodbc
 import re
 import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+import html
 import logging
 import warnings
 from logging.handlers import RotatingFileHandler
 import os
+import threading
+import collections
+from collections import defaultdict
 from datetime import datetime, timedelta
+from email.utils import parsedate_to_datetime
 import calendar
 import math
-from collections import defaultdict
 
 # ══════════════════════════════════════════════
 # ■ 설정값  (변경 시 여기만 수정)
@@ -106,7 +112,6 @@ _news_logger.setLevel(logging.ERROR)  # 뉴스 디버그 로그 억제
 # ══════════════════════════════════════════════
 # ■ 접속 로그
 # ══════════════════════════════════════════════
-import collections
 ACCESS_LOG_FILE = 'access.log'
 _access_history = collections.deque(maxlen=500)  # 최근 500건 메모리 보관
 
@@ -140,8 +145,6 @@ def restrict_to_internal():
 #   스레드별 연결 재사용 → 전 탭 공통 속도 향상
 #   연결 끊김 감지 시 자동 재연결
 # ══════════════════════════════════════════════
-import threading
-
 MAX_POOL_SIZE = 5   # 동시 연결 최대 수 (사용자 수에 맞게 조정)
 _pool_lock   = threading.Lock()
 _pool_conns  = []   # 대기 중인 연결 목록
@@ -946,10 +949,6 @@ def get_compare():
         },
     })
 
-# ─────────────────────────────────────────────
-# 서버 실행
-# ─────────────────────────────────────────────
-
 @app.route('/api/yearly-trend')
 def get_yearly_trend():
     # 연도별 월별 매출 집계 (사업단위 필터만 적용)
@@ -1094,9 +1093,6 @@ def get_plan():
         )
         df, err = query_df(sql)
         return df, err
-
-    # 선택 기간 계획 (차트/표용)
-    plan_where = ""  # 아래 make_plan_df로 대체
 
     # 선택 기간 계획 (차트/표/달성률용) - 계획 없어도 실적은 표시
     df_plan, err = make_plan_df(ym_from, ym_to)
@@ -1247,8 +1243,7 @@ def get_plan():
             dt_to = datetime.strptime(date_to[:7]+'-01', '%Y-%m-%d')
             try:    yoy_first = dt_to.replace(year=dt_to.year-1)
             except: yoy_first = dt_to.replace(year=dt_to.year-1, day=28)
-            import calendar as cal
-            last_day = cal.monthrange(yoy_first.year, yoy_first.month)[1]
+            last_day = calendar.monthrange(yoy_first.year, yoy_first.month)[1]
             yoy_last = yoy_first.replace(day=last_day)
             yoy_ym_str = yoy_first.strftime('%Y%m')
             df_yoy = filter_act(df_act_wide, yoy_first.strftime('%Y-%m-%d'), yoy_last.strftime('%Y-%m-%d'))
@@ -1405,12 +1400,12 @@ def get_plan():
     # df_prev, df_yoy 재사용을 위해 미리 계산
     try:
         df_prev = filter_act(df_act_wide, prev_first.strftime('%Y-%m-%d'), prev_last.strftime('%Y-%m-%d')) \
-                  if 'prev_first' in dir() else pd.DataFrame()
+                  if 'prev_first' in locals() else pd.DataFrame()
     except Exception:
         df_prev = pd.DataFrame()
     try:
         df_yoy = filter_act(df_act_wide, yoy_first.strftime('%Y-%m-%d'), yoy_last.strftime('%Y-%m-%d')) \
-                 if 'yoy_first' in dir() else pd.DataFrame()
+                 if 'yoy_first' in locals() else pd.DataFrame()
     except Exception:
         df_yoy = pd.DataFrame()
 
@@ -1573,10 +1568,6 @@ def get_plan():
 # ──────────────────────────────────────────────
 @app.route('/api/news')
 def get_news():
-    import urllib.request
-    import xml.etree.ElementTree as ET
-    import html
-
     kw_map = {
         '전체':    '주류업계 OR 소주 OR 맥주 OR 막걸리',
         '주류업계': '주류업계',
@@ -1643,7 +1634,6 @@ def get_news():
 
             # 날짜 파싱
             try:
-                from email.utils import parsedate_to_datetime
                 dt = parsedate_to_datetime(pub)
                 date_str = dt.strftime('%Y.%m.%d %H:%M')
             except Exception:
