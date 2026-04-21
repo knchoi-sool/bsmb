@@ -396,12 +396,13 @@ tbody td{padding:11px 13px;font-size:13px;white-space:nowrap;}
 <div class="wrap">
   <div class="card">
     <div class="list-header">
-      <div>
-  <div class="card-title" style="margin-bottom:0">거래처매출목록</div></div>
-      <select id="listChannelFilter" onchange="filterList(document.getElementById('listSearch').value)" style="padding:6px 10px;border:1.5px solid rgba(60,80,180,0.2);border-radius:8px;font-size:12px;color:var(--blue);background:#fff;cursor:pointer;min-width:120px">
-        <option value="">전체 유통</option>
-      </select>
-      <input type="text" class="list-search" id="listSearch" placeholder="🔍 거래처명·지역 검색..." oninput="filterList(this.value)">
+      <div class="card-title" style="margin-bottom:0">거래처매출목록</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="listChannelFilter" onchange="filterList(document.getElementById('listSearch').value)" style="padding:6px 10px;border:1.5px solid rgba(60,80,180,0.2);border-radius:8px;font-size:12px;color:var(--blue);background:#fff;cursor:pointer;min-width:120px">
+          <option value="">전체 유통</option>
+        </select>
+        <input type="text" class="list-search" id="listSearch" placeholder="🔍 거래처명·지역 검색..." oninput="filterList(this.value)">
+      </div>
     </div>
     <!-- 합계 요약 바 -->
     <div id="listSummary" style="display:none;background:linear-gradient(135deg,rgba(26,79,189,0.06),rgba(5,119,168,0.04));border:1.5px solid rgba(26,79,189,0.15);border-radius:10px;padding:12px 20px;margin-bottom:14px;display:flex;gap:32px;align-items:center;flex-wrap:wrap;">
