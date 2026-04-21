@@ -209,9 +209,6 @@ def query_df(sql, params=None):
     conn = None
     try:
         conn = get_connection()
-        # 링크드서버 뷰 쿼리: OPTION(RECOMPILE)로 매번 최적 실행계획 생성
-        if TABLE in sql and 'OPTION' not in sql.upper():
-            sql = sql.rstrip().rstrip(';') + ' OPTION(RECOMPILE)'
         df = pd.read_sql(sql, conn, params=params)
         release_connection(conn)
         return df, None
