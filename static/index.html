@@ -1763,8 +1763,12 @@ function renderPlan(d){
 
 function renderPlanTrendChart(deptName){
   if(!_planData) return;
-  const trend  = (_planData.dept_trend  || {})[deptName] || [];
-  const ptTrend = (_planData.plan_trend || {})[deptName] || [];
+  // 모드에 따라 키 결정 (lv2=본부, lv3=부서, lv4=팀)
+  let trendKey = deptName;
+  if(_planLvMode === 'lv2' && deptName !== '__total__') trendKey = `__lv2__${deptName}`;
+  if(_planLvMode === 'lv3' && deptName !== '__total__') trendKey = `__lv3__${deptName}`;
+  const trend  = (_planData.dept_trend  || {})[trendKey] || [];
+  const ptTrend = (_planData.plan_trend || {})[trendKey] || [];
   const titleEl = document.getElementById('planTrendTitle');
   if(titleEl) titleEl.textContent = (deptName==='__total__'?'전체 합계':deptName) + ' — 월별 추이';
 

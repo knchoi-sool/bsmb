@@ -1473,13 +1473,31 @@ def get_plan():
                 {'ym': ym, 'actual': int(df_trend[df_trend['ym']==ym]['actual'].sum())}
                 for ym in all_ym_trend
             ]
-            # 부서별
+            # 팀별 (DeptName)
             for dname in df_trend['DeptName'].unique():
                 sub = df_trend[df_trend['DeptName']==dname]
                 dept_trend[dname] = [
                     {'ym': ym, 'actual': int(sub[sub['ym']==ym]['actual'].sum())}
                     for ym in all_ym_trend
                 ]
+            # 본부별 (Lv2Name)
+            if 'Lv2Name' in df_trend.columns:
+                for lv2name in df_trend['Lv2Name'].dropna().unique():
+                    if not str(lv2name).strip(): continue
+                    sub = df_trend[df_trend['Lv2Name']==lv2name]
+                    dept_trend[f'__lv2__{lv2name}'] = [
+                        {'ym': ym, 'actual': int(sub[sub['ym']==ym]['actual'].sum())}
+                        for ym in all_ym_trend
+                    ]
+            # 부서별 (Lv3Name)
+            if 'Lv3Name' in df_trend.columns:
+                for lv3name in df_trend['Lv3Name'].dropna().unique():
+                    if not str(lv3name).strip(): continue
+                    sub = df_trend[df_trend['Lv3Name']==lv3name]
+                    dept_trend[f'__lv3__{lv3name}'] = [
+                        {'ym': ym, 'actual': int(sub[sub['ym']==ym]['actual'].sum())}
+                        for ym in all_ym_trend
+                    ]
             # 소분류별
             if 'ItemClassSName' in df_trend.columns:
                 for sname in df_trend['ItemClassSName'].unique():
@@ -1498,9 +1516,9 @@ def get_plan():
                           f"PlanYM <= '{trend_plan_to}'"]
         plan_t_where = "WHERE " + " AND ".join(plan_t_clauses)
         sql_pt = (
-            f"SELECT PlanYM, DeptName, ItemClassSName, SUM(PlanDomAmt) AS planamt "
+            f"SELECT PlanYM, DeptName, Lv2Name, Lv3Name, ItemClassSName, SUM(PlanDomAmt) AS planamt "
             f"FROM {PLAN_TABLE} {plan_t_where} "
-            f"GROUP BY PlanYM, DeptName, ItemClassSName"
+            f"GROUP BY PlanYM, DeptName, Lv2Name, Lv3Name, ItemClassSName"
         )
         df_pt, _ = query_df(sql_pt)
         p_dept = df_pt if df_pt is not None else pd.DataFrame()
@@ -1511,12 +1529,31 @@ def get_plan():
                 {'ym': ym, 'plan': int(p_dept[p_dept['PlanYM']==ym]['planamt'].sum())}
                 for ym in all_plan_ym
             ]
+            # 팀별 (DeptName)
             for dname in p_dept['DeptName'].unique():
                 sub = p_dept[p_dept['DeptName']==dname]
                 plan_trend[dname] = [
                     {'ym': ym, 'plan': int(sub[sub['PlanYM']==ym]['planamt'].sum())}
                     for ym in all_plan_ym
                 ]
+            # 본부별 (Lv2Name)
+            if 'Lv2Name' in p_dept.columns:
+                for lv2name in p_dept['Lv2Name'].dropna().unique():
+                    if not str(lv2name).strip(): continue
+                    sub = p_dept[p_dept['Lv2Name']==lv2name]
+                    plan_trend[f'__lv2__{lv2name}'] = [
+                        {'ym': ym, 'plan': int(sub[sub['PlanYM']==ym]['planamt'].sum())}
+                        for ym in all_plan_ym
+                    ]
+            # 부서별 (Lv3Name)
+            if 'Lv3Name' in p_dept.columns:
+                for lv3name in p_dept['Lv3Name'].dropna().unique():
+                    if not str(lv3name).strip(): continue
+                    sub = p_dept[p_dept['Lv3Name']==lv3name]
+                    plan_trend[f'__lv3__{lv3name}'] = [
+                        {'ym': ym, 'plan': int(sub[sub['PlanYM']==ym]['planamt'].sum())}
+                        for ym in all_plan_ym
+                    ]
     except Exception as e:
         dept_trend = {}
         plan_trend = {}
