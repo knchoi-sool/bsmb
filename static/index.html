@@ -1846,7 +1846,8 @@ function fillPlanLv2Select(lv2_list){
     opt.value = name; opt.textContent = name;
     sel.appendChild(opt);
   });
-  sel.value = prev; // 이전 선택값 유지
+  // 이전 선택값 유지, 없으면 커머스본부 디폴트
+  sel.value = prev || '커머스본부';
   _planLv2Filter = sel.value;
 }
 
