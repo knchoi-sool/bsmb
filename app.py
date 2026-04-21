@@ -1329,7 +1329,7 @@ def get_plan():
             'yoy_rate': safe_rate(dept_yoy, row['actual']) if dept_yoy > 0 else None,
         })
 
-    # ── 본부(Lv2) / 부서(Lv3) / 팀(Lv4) 별 계획대비실적 테이블 생성
+    # ── 본부(Lv1) / 부서(Lv2) / 팀(Lv3) 별 계획대비실적 테이블 생성
     def build_lv_table(lv_col, parent_col=None):
         """Lv1Name/Lv2Name/Lv3Name 기준 계획대비실적 집계
            parent_col: 상위 본부(Lv1Name) 매핑용 컬럼"""
