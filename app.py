@@ -1300,14 +1300,14 @@ def get_plan():
         return result
 
     dept_table = []
-    # dept_lv2_map: DeptName → Lv1Name 매핑 (df_plan 기준으로 미리 생성)
-    dept_lv2_map = {}
+    # dept_lv1_map: DeptName → Lv1Name 매핑 (df_plan 기준으로 미리 생성)
+    dept_lv1_map = {}
     if len(df_plan) and 'DeptName' in df_plan.columns and 'Lv1Name' in df_plan.columns:
         for _, row in df_plan[['DeptName','Lv1Name']].drop_duplicates().iterrows():
             k = str(row['DeptName']).strip()
             v = str(row['Lv1Name']).strip()
             if k and k != '미지정':
-                dept_lv2_map[k] = v
+                dept_lv1_map[k] = v
 
     dept_comp_last = sort_by_dept(build_last_month(['DeptName']))
     for row in dept_comp_last:
@@ -1316,7 +1316,7 @@ def get_plan():
         dept_yoy  = float(yoy_act.get(dname, 0))
         dept_table.append({
             'dept':     dname,
-            'lv2':      dept_lv2_map.get(dname, ''),  # 소속 본부
+            'lv2':      dept_lv1_map.get(dname, ''),  # 소속 본부
             'plan':     row['plan'],
             'actual':   row['actual'],
             'rate':     row['rate'],
@@ -1361,8 +1361,8 @@ def get_plan():
         except Exception:
             pass
 
-        # 상위 본부(Lv2) 매핑 테이블 생성 - 계획/실적 모두 활용
-        lv2_map = {}
+        # 상위 본부(Lv1) 매핑 테이블 생성 - 계획/실적 모두 활용
+        lv1_map = {}
         if parent_col and parent_col != lv_col:
             for df_tmp in [df_plan, df_act]:
                 if len(df_tmp) and lv_col in df_tmp.columns and parent_col in df_tmp.columns:
@@ -1370,7 +1370,7 @@ def get_plan():
                         k = str(row[lv_col]).strip()
                         v = str(row[parent_col]).strip()
                         if k and k != '미지정' and k != '' and v and v != '':
-                            lv2_map[k] = v
+                            lv1_map[k] = v
 
         all_names = sorted(set(list(pg.index) + list(ag.index)))
         result = []
@@ -1382,7 +1382,7 @@ def get_plan():
             yy = float(yoy_lv.get(name, 0))
             result.append({
                 'dept':      name,
-                'lv2':       lv2_map.get(name, ''),  # 소속 본부
+                'lv1':       lv1_map.get(name, ''),  # 소속 본부
                 'plan':      int(p),
                 'actual':    int(a),
                 'rate':      safe_rate(p, a),
@@ -1430,12 +1430,12 @@ def get_plan():
             if len(df_tmp) and lv_col in df_tmp.columns:
                 df_tmp[lv_col] = df_tmp[lv_col].fillna('').astype(str).str.strip()
 
-    lv2_table = build_lv_table('Lv1Name')                            # 본부
-    lv3_table = build_lv_table('Lv2Name', parent_col='Lv1Name')      # 부서 (본부 소속)
-    lv4_table = build_lv_table('Lv3Name', parent_col='Lv1Name')      # 팀 (본부 소속)
+    lv1_table = build_lv_table('Lv1Name')                            # 본부
+    lv2_table = build_lv_table('Lv2Name', parent_col='Lv1Name')      # 부서 (본부 소속)
+    lv3_table = build_lv_table('Lv3Name', parent_col='Lv1Name')      # 팀 (본부 소속)
 
     # 본부 목록 (콤보박스용)
-    lv2_list = sorted([r['dept'] for r in lv2_table if r['dept']])
+    lv1_list = sorted([r['dept'] for r in lv1_table if r['dept']])
 
     # 중분류별 소분류 계획/실적 매핑
     mid_small = {}
@@ -1482,19 +1482,19 @@ def get_plan():
                 ]
             # 본부별 (Lv1Name)
             if 'Lv1Name' in df_trend.columns:
-                for lv2name in df_trend['Lv1Name'].dropna().unique():
-                    if not str(lv2name).strip(): continue
-                    sub = df_trend[df_trend['Lv1Name']==lv2name]
-                    dept_trend[f'__lv2__{lv2name}'] = [
+                for lv1name in df_trend['Lv1Name'].dropna().unique():
+                    if not str(lv1name).strip(): continue
+                    sub = df_trend[df_trend['Lv1Name']==lv1name]
+                    dept_trend[f'__lv1__{lv1name}'] = [
                         {'ym': ym, 'actual': int(sub[sub['ym']==ym]['actual'].sum())}
                         for ym in all_ym_trend
                     ]
             # 부서별 (Lv2Name)
             if 'Lv2Name' in df_trend.columns:
-                for lv3name in df_trend['Lv2Name'].dropna().unique():
-                    if not str(lv3name).strip(): continue
-                    sub = df_trend[df_trend['Lv2Name']==lv3name]
-                    dept_trend[f'__lv3__{lv3name}'] = [
+                for lv2name in df_trend['Lv2Name'].dropna().unique():
+                    if not str(lv2name).strip(): continue
+                    sub = df_trend[df_trend['Lv2Name']==lv2name]
+                    dept_trend[f'__lv2__{lv2name}'] = [
                         {'ym': ym, 'actual': int(sub[sub['ym']==ym]['actual'].sum())}
                         for ym in all_ym_trend
                     ]
@@ -1538,19 +1538,19 @@ def get_plan():
                 ]
             # 본부별 (Lv1Name)
             if 'Lv1Name' in p_dept.columns:
-                for lv2name in p_dept['Lv1Name'].dropna().unique():
-                    if not str(lv2name).strip(): continue
-                    sub = p_dept[p_dept['Lv1Name']==lv2name]
-                    plan_trend[f'__lv2__{lv2name}'] = [
+                for lv1name in p_dept['Lv1Name'].dropna().unique():
+                    if not str(lv1name).strip(): continue
+                    sub = p_dept[p_dept['Lv1Name']==lv1name]
+                    plan_trend[f'__lv1__{lv1name}'] = [
                         {'ym': ym, 'plan': int(sub[sub['PlanYM']==ym]['planamt'].sum())}
                         for ym in all_plan_ym
                     ]
             # 부서별 (Lv2Name)
             if 'Lv2Name' in p_dept.columns:
-                for lv3name in p_dept['Lv2Name'].dropna().unique():
-                    if not str(lv3name).strip(): continue
-                    sub = p_dept[p_dept['Lv2Name']==lv3name]
-                    plan_trend[f'__lv3__{lv3name}'] = [
+                for lv2name in p_dept['Lv2Name'].dropna().unique():
+                    if not str(lv2name).strip(): continue
+                    sub = p_dept[p_dept['Lv2Name']==lv2name]
+                    plan_trend[f'__lv2__{lv2name}'] = [
                         {'ym': ym, 'plan': int(sub[sub['PlanYM']==ym]['planamt'].sum())}
                         for ym in all_plan_ym
                     ]
@@ -1576,10 +1576,10 @@ def get_plan():
     return jsonify({
         'monthly':    monthly,
         'dept_table': dept_table,
-        'lv2_table':  lv2_table,   # 본부별
-        'lv3_table':  lv3_table,   # 부서별
-        'lv4_table':  lv4_table,   # 팀별
-        'lv2_list':   lv2_list,    # 본부 목록 (콤보박스용)
+        'lv1_table':  lv1_table,   # 본부별
+        'lv2_table':  lv2_table,   # 부서별
+        'lv3_table':  lv3_table,   # 팀별
+        'lv1_list':   lv1_list,    # 본부 목록 (콤보박스용)
         'cur_ym':     ym_to,  # 마지막 월
         'prev_ym':    prev_ym_str,
         'yoy_ym':     yoy_ym_str,

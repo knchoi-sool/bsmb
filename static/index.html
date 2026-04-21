@@ -735,10 +735,10 @@ tbody td{padding:11px 13px;font-size:13px;white-space:nowrap;}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="card-title" id="planDetailTitle" style="margin-bottom:0">부서별 계획대비 실적 상세</div>
       <div style="display:flex;gap:5px">
-        <button id="planLvLv4"  class="qbtn active" onclick="switchPlanLv('lv4',this)">팀</button>
-        <button id="planLvLv3"  class="qbtn" onclick="switchPlanLv('lv3',this)">부서</button>
-        <button id="planLvLv2"  class="qbtn" onclick="switchPlanLv('lv2',this)">본부</button>
-        <select id="planLv2Filter" onchange="onPlanLv2Change()"
+        <button id="planLvLv3"  class="qbtn active" onclick="switchPlanLv('lv3',this)">팀</button>
+        <button id="planLvLv2"  class="qbtn" onclick="switchPlanLv('lv2',this)">부서</button>
+        <button id="planLvLv1"  class="qbtn" onclick="switchPlanLv('lv1',this)">본부</button>
+        <select id="planLv1Filter" onchange="onPlanLv1Change()"
           style="padding:4px 10px;border:0.5px solid #e0e0e0;border-radius:6px;font-size:12px;
                  font-family:'Noto Sans KR',sans-serif;color:#374151;background:#fafafa;cursor:pointer;outline:none">
           <option value="">전체 본부</option>
@@ -1677,7 +1677,7 @@ function rateStr(rate){
 
 function renderPlan(d){
   // 본부 콤보박스 초기화
-  fillPlanLv2Select(d.lv2_list || []);
+  fillPlanLv1Select(d.lv1_list || []);
 
   // 기존 차트 전부 초기화
   ['planMonthlyChart','planTrendChart','planSmallTrendChart'].forEach(id=>dc(id));
@@ -1775,10 +1775,10 @@ function renderPlan(d){
 
 function renderPlanTrendChart(deptName){
   if(!_planData) return;
-  // 모드에 따라 키 결정 (lv2=본부, lv3=부서, lv4=팀)
+  // 모드에 따라 키 결정 (lv1=본부, lv2=부서, lv3=팀)
   let trendKey = deptName;
+  if(_planLvMode === 'lv1' && deptName !== '__total__') trendKey = `__lv1__${deptName}`;
   if(_planLvMode === 'lv2' && deptName !== '__total__') trendKey = `__lv2__${deptName}`;
-  if(_planLvMode === 'lv3' && deptName !== '__total__') trendKey = `__lv3__${deptName}`;
   const trend  = (_planData.dept_trend  || {})[trendKey] || [];
   const ptTrend = (_planData.plan_trend || {})[trendKey] || [];
   const titleEl = document.getElementById('planTrendTitle');
@@ -1839,37 +1839,37 @@ function renderPlanTrendChart(deptName){
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ■ 부서별 계획대비실적 상세표 레벨 전환
-//   dept=기존부서명 / lv2=본부 / lv3=부서(Lv3)
+//   dept=기존부서명 / lv1=본부(Lv1) / lv2=부서(Lv2) / lv3=팀(Lv3)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-let _planLvMode = 'lv4'; // 기본: 팀별
-let _planLv2Filter = '';  // 선택된 본부 ('' = 전체)
+let _planLvMode = 'lv3'; // 기본: 팀별
+let _planLv1Filter = '';  // 선택된 본부 ('' = 전체)
 
-function onPlanLv2Change(){
-  const sel = document.getElementById('planLv2Filter');
-  _planLv2Filter = sel ? sel.value : '';
+function onPlanLv1Change(){
+  const sel = document.getElementById('planLv1Filter');
+  _planLv1Filter = sel ? sel.value : '';
   window._planSelectedDept = null;
   if(_planData) renderPlanDetailTable(_planData);
 }
 
 // 본부 콤보박스 목록 채우기
-function fillPlanLv2Select(lv2_list){
-  const sel = document.getElementById('planLv2Filter');
+function fillPlanLv1Select(lv1_list){
+  const sel = document.getElementById('planLv1Filter');
   if(!sel) return;
   const prev = sel.value;
   sel.innerHTML = '<option value="">전체 본부</option>';
-  (lv2_list || []).forEach(name => {
+  (lv1_list || []).forEach(name => {
     const opt = document.createElement('option');
     opt.value = name; opt.textContent = name;
     sel.appendChild(opt);
   });
   // 이전 선택값 유지, 없으면 커머스본부 디폴트
   sel.value = prev || '커머스본부';
-  _planLv2Filter = sel.value;
+  _planLv1Filter = sel.value;
 }
 
 function switchPlanLv(mode, btn){
   _planLvMode = mode;
-  document.querySelectorAll('#planLvLv4,#planLvLv2,#planLvLv3')
+  document.querySelectorAll('#planLvLv3,#planLvLv2,#planLvLv1')
     .forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   window._planSelectedDept = null;
@@ -1884,24 +1884,24 @@ function renderPlanDetailTable(d){
 
   // 레벨 모드에 따라 데이터 선택
   const lvMap = {
-    'lv4':  { data: d.lv4_table,  label: '팀별' },
-    'lv2':  { data: d.lv2_table,  label: '본부별' },
-    'lv3':  { data: d.lv3_table,  label: '부서별' },
+    'lv3':  { data: d.lv3_table,  label: '팀별' },
+    'lv1':  { data: d.lv1_table,  label: '본부별' },
+    'lv2':  { data: d.lv2_table,  label: '부서별' },
   };
-  const cur = lvMap[_planLvMode] || lvMap['lv4'];
-  let tableData = cur.data || d.lv4_table;
+  const cur = lvMap[_planLvMode] || lvMap['lv3'];
+  let tableData = cur.data || d.lv3_table;
   if(!tableData) return;
 
   // 본부 필터 적용
-  if(_planLv2Filter){
-    if(_planLvMode === 'lv2'){
-      tableData = tableData.filter(r => r.dept === _planLv2Filter);
+  if(_planLv1Filter){
+    if(_planLvMode === 'lv1'){
+      tableData = tableData.filter(r => r.dept === _planLv1Filter);
     } else {
-      tableData = tableData.filter(r => r.lv2 === _planLv2Filter);
+      tableData = tableData.filter(r => r.lv1 === _planLv1Filter);
     }
   }
 
-  const filterLabel = _planLv2Filter ? ` — ${_planLv2Filter}` : '';
+  const filterLabel = _planLv1Filter ? ` — ${_planLv1Filter}` : '';
   if(title) title.textContent = cur.label + ' 계획대비 실적 상세 (단위: 만원)' + filterLabel;
 
 
