@@ -1875,9 +1875,13 @@ function renderPlanDetailTable(d){
   let tableData = cur.data || d.lv4_table;
   if(!tableData) return;
 
-  // 본부 필터 적용 (본부 토글 선택 시에는 필터 미적용)
-  if(_planLv2Filter && _planLvMode !== 'lv2'){
-    tableData = tableData.filter(r => r.lv2 === _planLv2Filter);
+  // 본부 필터 적용
+  if(_planLv2Filter){
+    if(_planLvMode === 'lv2'){
+      tableData = tableData.filter(r => r.dept === _planLv2Filter);
+    } else {
+      tableData = tableData.filter(r => r.lv2 === _planLv2Filter);
+    }
   }
 
   const filterLabel = _planLv2Filter ? ` — ${_planLv2Filter}` : '';
