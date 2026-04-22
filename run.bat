@@ -1,9 +1,14 @@
 @echo off
 title BSM Dashboard Server
 
-:: Git 정보
-for /f %%i in ('git rev-parse --short HEAD 2^>nul') do set GIT_HASH=%%i
-for /f %%i in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set GIT_BRANCH=%%i
+:: Git 정보 (임시파일 방식 - 오류 없음)
+git rev-parse --short HEAD > "%TEMP%\git_hash.tmp" 2>nul
+set /p GIT_HASH=<"%TEMP%\git_hash.tmp"
+del "%TEMP%\git_hash.tmp" 2>nul
+
+git rev-parse --abbrev-ref HEAD > "%TEMP%\git_branch.tmp" 2>nul
+set /p GIT_BRANCH=<"%TEMP%\git_branch.tmp"
+del "%TEMP%\git_branch.tmp" 2>nul
 
 echo.
 echo  =====================================================
