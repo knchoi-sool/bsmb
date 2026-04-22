@@ -1412,7 +1412,7 @@ def get_plan():
     # ── OrgCd 기준 정렬 맵 조회 (Lv3Name, Lv2Name, Lv1Name → OrgCd)
     org_sort_map = {}  # {이름: OrgCd} - OrgCd 알파벳 순으로 정렬하면 조직도 순서 유지
     try:
-        sql_org = f"SELECT Lv1Name, Lv2Name, Lv3Name, OrgCd FROM {ORG_TABLE}"
+        sql_org = f"SELECT Lv1Name, Lv2Name, Lv3Name, OrgCd FROM {ORG_TABLE} WHERE CompanySeq = 1"
         df_org, _ = query_df(sql_org)
         if df_org is not None and len(df_org):
             for _, row in df_org.iterrows():
